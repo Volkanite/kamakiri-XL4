@@ -14,6 +14,25 @@ import os
 
 def p32(x):
     return struct.pack(">I", x)
+    
+def raise_(ex):
+    raise ex
+
+
+def to_bytes(value, size=1, endian='>'):
+    return {
+        1: lambda: struct.pack(endian + 'B', value),
+        2: lambda: struct.pack(endian + 'H', value),
+        4: lambda: struct.pack(endian + 'I', value)
+    }.get(size, lambda: raise_(RuntimeError("invalid size")))()
+
+
+def from_bytes(value, size=1, endian='>'):
+    return {
+        1: lambda: struct.unpack(endian + 'B', value)[0],
+        2: lambda: struct.unpack(endian + 'H', value)[0],
+        4: lambda: struct.unpack(endian + 'I', value)[0]
+    }.get(size, lambda: raise_(RuntimeError("invalid size")))()
 
 def load_payload_file(path):
     with open(path, "rb") as fin:
@@ -31,6 +50,8 @@ def attempt2(d):
     
     size = len(payload)
     
+    #send DA
+    
     d.write(b"\xD7")
     result = d.read(1)
     d.write(p32(0x200D00))
@@ -39,8 +60,30 @@ def attempt2(d):
     result = d.read(4)
     d.write(p32(0x100))
     result = d.read(4)
+    
+    status = d.read(2)
+    
+    if from_bytes(status, 2) != 0:
+        raise RuntimeError("status is {}".format(status.hex()))
 
     d.write(payload)
+    
+    checksum = d.read(2)
+    status = d.read(2)
+    
+    if from_bytes(status, 2) != 0:
+        raise RuntimeError("status is {}".format(status.hex()))
+    
+    # jump DA
+    d.write(b"\xD5")
+    result = d.read(1)
+    d.write(p32(0x200D00))
+    result = d.read(4)
+    
+    status = d.read(2)
+    
+    if from_bytes(status, 2) != 0:
+        raise RuntimeError("status is {}".format(status.hex()))
 
 def noop(*args, **kwargs):
     pass
