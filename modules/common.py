@@ -4,44 +4,43 @@ import glob
 import time
 
 import serial
+import serial.tools.list_ports
 
 from logger import log
 
 BAUD = 115200
 TIMEOUT = 5
+VID = "0E8D"
+PID = "0003"
 
 
 CRYPTO_BASE = 0x10210000 # for karnak
 
 
-def serial_ports ():
-    """ Lists available serial ports
+def serial_ports():
+        """ Lists available serial ports
+            :returns:
+                A set containing the serial ports available on the system
+        """
 
-        :raises EnvironmentError:
-            On unsupported or unknown platforms
-        :returns:
-            A set containing the serial ports available on the system
-    """
+        result = set()
+        ports = list(serial.tools.list_ports.comports())
+        for port in ports:
+            if hasattr(port, "hwid"):
+                port_hwid = port.hwid
+                port_device = port.device
+            else:
+                port_hwid = port[2]
+                port_device = port[0]
+            if VID and PID in port_hwid:
+                try:
+                    s = serial.Serial(port_device, timeout=TIMEOUT)
+                    s.close()
+                    result.add(port_device)
+                except (OSError, serial.SerialException):
+                    pass
 
-    if sys.platform.startswith("win"):
-        ports = [ "COM{0:d}".format(i + 1) for i in range(256) ]
-    elif sys.platform.startswith("linux"):
-        ports = glob.glob("/dev/ttyACM*")
-    elif sys.platform.startswith("darwin"):
-        ports = glob.glob("/dev/cu.usbmodem*")
-    else:
-        raise EnvironmentError("Unsupported platform")
-
-    result = set()
-    for port in ports:
-        try:
-            s = serial.Serial(port, timeout=TIMEOUT)
-            s.close()
-            result.add(port)
-        except (OSError, serial.SerialException):
-            pass
-
-    return result
+        return result
 
 
 def p32_be(x):
