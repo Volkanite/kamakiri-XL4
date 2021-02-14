@@ -111,7 +111,7 @@ def main(dev):
 
 if __name__ == "__main__":
 
-    check_modemmanager()
+    #check_modemmanager()
 
     dev = Device()
     dev.find_device()
