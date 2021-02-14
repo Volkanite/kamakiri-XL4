@@ -10,12 +10,12 @@ void (**ptr_recv)();
 void (*orig_ptr_send)();
 void (*orig_ptr_recv)();
 
-int (*send_dword)();
-int (*recv_dword)();
+void (*send_dword)(uint32_t, int);
+uint32_t (*recv_dword)();
 // addr, sz
 int (*send_data)();
 // addr, sz, flags (=0)
-int (*recv_data)();
+void (*recv_data)(int, uint32_t, uint32_t);
 
 void low_uart_put(int ch);
 
