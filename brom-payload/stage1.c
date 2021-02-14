@@ -20,7 +20,7 @@ int main() {
     send_usb_response(0,0,1);
 
     print("Entering command loop\n");
-    send_dword(0xA1A2A3A4);
+    send_dword(0xA1A2A3A4, 1);
 
     while (1) {
         uint32_t magic = recv_dword();
@@ -36,14 +36,12 @@ int main() {
             uint32_t size = recv_dword();
             //printf("Write %d Bytes to address 0x%08X\n", size, address);
             print("Write\n");
-            if(recv_data(address, size, 0) == 0) {
-                print("OK\n");
-                send_dword(0xD0D0D0D0);
+			
+            recv_data(address, size, 0);
+                //print("OK\n");
+            send_dword(0xD0D0D0D0, 1);
                 //hex_dump((void *)address, size);
-            } else {
-                send_dword(0xF0F0F0F0);
-                 print("Read fail\n");
-            }
+
             break;
         }
         case 0x4001: {

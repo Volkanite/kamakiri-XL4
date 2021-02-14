@@ -67,7 +67,7 @@ int main() {
 
     printf("Entering command loop\n");
 
-    send_dword(0xB1B2B3B4);
+    send_dword(0xB1B2B3B4, 1);
 
     while (1) {
         memset(buf, 0, sizeof(buf));
@@ -99,7 +99,7 @@ int main() {
                 printf("Write error!\n");
             } else {
                 printf("OK\n");
-                send_dword(0xD0D0D0D0);
+                send_dword(0xD0D0D0D0, 1);
             }
             break;
         }
