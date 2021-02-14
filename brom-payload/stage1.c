@@ -23,7 +23,7 @@ int main() {
 	
 	send_dword = (void*)0xBCD3;
 	recv_dword = (void*)0xBC9F;
-	send_data = (void*)0xBED1;
+	send_data = (void*)0xBDA3;
 	recv_data = (void*)0xBD15;
 
     send_dword(0xA1A2A3A4, 1);

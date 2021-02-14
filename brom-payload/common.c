@@ -10,7 +10,7 @@ void (*orig_ptr_recv)();
 void (*send_dword)(uint32_t, int) = (void*)0xBCD3;
 uint32_t (*recv_dword)() = (void*)0xBC9F;
 // addr, sz
-int (*send_data)() = (void*)0xBED1;
+int (*send_data)() = (void*)0xBDA3;
 // addr, sz, flags (=0)
 void (*recv_data)(int, uint32_t, uint32_t) = (void*)0xBD15;
 
