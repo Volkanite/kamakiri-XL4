@@ -55,17 +55,22 @@ int main() {
     char buf[0x200] = { 0 };
     int ret = 0;
 
-    printf("Entered 2ND stage payload\n");
-    printf("Copyright xyz, k4y0z 2019\n");
-
-//    while(1) {}
+    //printf("Entered 2ND stage payload\n");
+    //printf("Copyright xyz, k4y0z 2019\n");
 
     struct msdc_host host = { 0 };
     host.ocr_avail = MSDC_OCR_AVAIL;
+	
+	send_dword = (void*)0xBCD3;
+	recv_dword = (void*)0xBC9F;
+	send_data = (void*)0xBED1;
+	recv_data = (void*)0xBD15;
+	
+	//send_dword(0xB1B2B3B4, 1);
 
     mmc_init(&host);
 
-    printf("Entering command loop\n");
+    //printf("Entering command loop\n");
 
     send_dword(0xB1B2B3B4, 1);
 
@@ -73,15 +78,15 @@ int main() {
         memset(buf, 0, sizeof(buf));
         uint32_t magic = recv_dword();
         if (magic != 0xf00dd00d) {
-            printf("Protocol error\n");
-            printf("Magic received = 0x%08X\n", magic);
+            //printf("Protocol error\n");
+            //printf("Magic received = 0x%08X\n", magic);
             break;
         }
         uint32_t cmd = recv_dword();
         switch (cmd) {
         case 0x1000: {
             uint32_t block = recv_dword();
-            printf("Read block 0x%08X\n", block);
+            //printf("Read block 0x%08X\n", block);
             memset(buf, 0, sizeof(buf));
             if (mmc_read(&host, block, buf) != 0) {
                 printf("Read error!\n");
@@ -92,33 +97,33 @@ int main() {
         }
         case 0x1001: {
             uint32_t block = recv_dword();
-            printf("Write block 0x%08X ", block);
+            //printf("Write block 0x%08X ", block);
             memset(buf, 0, sizeof(buf));
             recv_data(buf, 0x200, 0);
             if (mmc_write(&host, block, buf) != 0) {
-                printf("Write error!\n");
+                //printf("Write error!\n");
             } else {
-                printf("OK\n");
+                //printf("OK\n");
                 send_dword(0xD0D0D0D0, 1);
             }
             break;
         }
         case 0x1002: {
             uint32_t part = recv_dword();
-            printf("Switch to partition %d => ", part);
+            //printf("Switch to partition %d => ", part);
             ret = mmc_set_part(&host, part);
-            printf("0x%08X\n", ret);
+            //printf("0x%08X\n", ret);
             mdelay(500); // just in case
             break;
         }
         case 0x2000: {
-            printf("Read rpmb\n");
+            //printf("Read rpmb\n");
             mmc_rpmb_read(&host, buf);
             send_data(buf, 0x100);
             break;
         }
         case 0x2001: {
-            printf("Write rpmb\n");
+            //printf("Write rpmb\n");
             recv_data(buf, 0x100, 0);
             mmc_rpmb_write(&host, buf);
             break;
@@ -126,12 +131,12 @@ int main() {
         case 0x5000: {
             uint32_t address = recv_dword();
             uint32_t size = recv_dword();
-            printf("Read %d Bytes from address 0x%08X\n", size, address);
+            //printf("Read %d Bytes from address 0x%08X\n", size, address);
             send_data(address, size);
             break;
         }
         case 0x3000: {
-            printf("Reboot\n");
+            //printf("Reboot\n");
             volatile uint32_t *reg = (volatile uint32_t *)0x10007000;
             reg[8/4] = 0x1971;
             reg[0/4] = 0x22000014;
@@ -142,18 +147,18 @@ int main() {
             }
         }
         case 0x3001: {
-            printf("Kick watchdog\n");
+            //printf("Kick watchdog\n");
             volatile uint32_t *reg = (volatile uint32_t *)0x10007000;
             reg[8/4] = 0x1971;
             break;
         }
         default:
-            printf("Invalid command\n");
+            //printf("Invalid command\n");
             break;
         }
     }
 
-    printf("Exiting the payload\n");
+    //printf("Exiting the payload\n");
 
     while (1) {
 

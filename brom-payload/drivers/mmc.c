@@ -14,7 +14,7 @@
 
 unsigned int msdc_cmd(struct msdc_host *host, struct mmc_command *cmd);
 void sleepy(void);
-void hex_dump(const void* data, size_t size);
+//void hex_dump(const void* data, size_t size);
 
 int mmc_go_idle(struct msdc_host *host)
 {
@@ -25,6 +25,7 @@ int mmc_go_idle(struct msdc_host *host)
     cmd.arg = 0;
     cmd.flags = MMC_RSP_SPI_R1 | MMC_RSP_NONE | MMC_CMD_BC;
 
+	//err = 0;
     err = msdc_cmd(host, &cmd);
 
     // host->use_spi_crc = 0;
@@ -263,8 +264,11 @@ int __mmc_switch(struct msdc_host *host, u8 set, u8 index, u8 value,
     // } else
     {
         if (status & 0xFDFFA000)
-            printf("%s: unexpected status %#x after "
-                   "switch", "MSDC0", status);
+		{
+			/*printf("%s: unexpected status %#x after "
+                   "switch", "MSDC0", status);*/
+		}
+            
         if (status & R1_SWITCH_ERROR)
             return -EBADMSG;
     }
@@ -283,7 +287,7 @@ static int mmc_rpmb_send_command(struct msdc_host *host, u8 *buf, __u16 blks,
      * set CMD23
      */
     sbc.opcode = MMC_SET_BLOCK_COUNT;
-    // printf("blks = %d\n", blks);
+    // //printf("blks = %d\n", blks);
     sbc.arg = blks;
     if ((req_type == RPMB_REQ) && (type == RPMB_WRITE_DATA ||
                 type == RPMB_PROGRAM_KEY))
@@ -292,7 +296,7 @@ static int mmc_rpmb_send_command(struct msdc_host *host, u8 *buf, __u16 blks,
 
     ret = msdc_cmd(host, &sbc);
     if (ret) {
-        printf("msdc_cmd SET_BLOCK_COUNT fail %d\n", ret);
+        //printf("msdc_cmd SET_BLOCK_COUNT fail %d\n", ret);
         return ret;
     }
 
@@ -311,11 +315,11 @@ static int mmc_rpmb_send_command(struct msdc_host *host, u8 *buf, __u16 blks,
 
     ret = msdc_cmd(host, &cmd);
     if (ret) {
-        printf("msdc_cmd READ/WRITE MULTIPLE_BLOCK fail %d\n", ret);
+        //printf("msdc_cmd READ/WRITE MULTIPLE_BLOCK fail %d\n", ret);
         return ret;
     }
 
-    // printf("and the buf:\n");
+    // //printf("and the buf:\n");
     // hex_dump(buf, 0x200);
 
     // this only works for a single block
@@ -349,8 +353,8 @@ int mmc_rpmb_partition_ops(struct mmc_core_rpmb_req *rpmb_req, struct msdc_host 
     buf_frame = rpmb_req->frame;
 
     if (!p_req || !rpmb_req->ready || !buf_frame) {
-        printf("%s: mmc_ioc_rpmb_req is not prepared\n",
-                "MSDC0");
+        //printf("%s: mmc_ioc_rpmb_req is not prepared\n",
+                //"MSDC0");
         return -EINVAL;
     }
 
@@ -367,8 +371,8 @@ int mmc_rpmb_partition_ops(struct mmc_core_rpmb_req *rpmb_req, struct msdc_host 
         err = mmc_rpmb_send_command(host, buf_frame, 1, type, RPMB_REQ);
 
     if (err) {
-        printf("%s: request write counter failed (%d)\n",
-                "MSDC0", err);
+        //printf("%s: request write counter failed (%d)\n",
+                //"MSDC0", err);
         goto out;
     }
 
@@ -383,8 +387,8 @@ int mmc_rpmb_partition_ops(struct mmc_core_rpmb_req *rpmb_req, struct msdc_host 
         err = mmc_rpmb_send_command(host, buf_frame, 1,
                 RPMB_RESULT_READ, RPMB_REQ);
         if (err) {
-            printf("%s: request write counter failed (%d)\n",
-                    "MSDC0", err);
+            //printf("%s: request write counter failed (%d)\n",
+                    //"MSDC0", err);
             goto out;
         }
     }
@@ -400,8 +404,8 @@ int mmc_rpmb_partition_ops(struct mmc_core_rpmb_req *rpmb_req, struct msdc_host 
         err = mmc_rpmb_send_command(host, buf_frame,
                 1, type, RPMB_RESP);
     if (err) {
-        printf("%s: response write counter failed (%d)\n",
-                "MSDC0", err);
+        //printf("%s: response write counter failed (%d)\n",
+                //"MSDC0", err);
     }
 out:
     return err;
@@ -423,8 +427,8 @@ void mmc_rpmb_post_frame(struct mmc_core_rpmb_req *rpmb_req)
         return;
 
 
-    printf("post-frame:\n");
-    hex_dump(buf_frame, 0x200);
+    //printf("post-frame:\n");
+    //hex_dump(buf_frame, 0x200);
 
     /*
      * Regarding to the check rules, here is the post
@@ -507,15 +511,15 @@ static int mmc_rpmb_request_check(struct msdc_host *host,
      * So here, we only check the 'must' paramters
      */
     if (!p_req->result) {
-        printf("%s: Type %d has NULL pointer for result\n",
-                "MSDC0", p_req->type);
+        //printf("%s: Type %d has NULL pointer for result\n",
+                //"MSDC0", p_req->type);
         return -EINVAL;
     }
 
     if (p_req->type == RPMB_GET_WRITE_COUNTER) {
         if (!p_req->nonce || !p_req->wc) {
-            printf("%s: Type %d has NULL pointer for nonce/wc\n",
-                    "MSDC0", p_req->type);
+            //printf("%s: Type %d has NULL pointer for nonce/wc\n",
+                    //"MSDC0", p_req->type);
             return -EINVAL;
         }
         /*
@@ -527,54 +531,54 @@ static int mmc_rpmb_request_check(struct msdc_host *host,
 #if 0
         if ((__u32)(p_req->addr + p_req->blk_cnt) >
                 card->ext_csd.rpmb_size) {
-            printf("%s Type %d: beyond the RPMB partition rang addr %d, blk_cnt %d, rpmb_size %d\n",
+            /*printf("%s Type %d: beyond the RPMB partition rang addr %d, blk_cnt %d, rpmb_size %d\n",
                     "MSDC0",
                     p_req->type,
                     p_req->addr,
                     p_req->blk_cnt,
-                    card->ext_csd.rpmb_size);
+                    card->ext_csd.rpmb_size);*/
             return -EINVAL;
         }
 #endif
         if (p_req->blk_cnt == 0) {
-            printf("%s: Type %d has zero block count\n",
+            /*printf("%s: Type %d has zero block count\n",
                     "MSDC0",
-                    p_req->blk_cnt);
+                    p_req->blk_cnt);*/
             return -EINVAL;
         }
 #if 0
  else if (p_req->blk_cnt > card->rpmb_max_req) {
-            printf("%s: Type %d has invalid block count, cannot large than %d\n",
+            /*printf("%s: Type %d has invalid block count, cannot large than %d\n",
                     "MSDC0",
                     p_req->blk_cnt,
-                    card->rpmb_max_req);
+                    card->rpmb_max_req);*/
             return -EINVAL;
         }
 #endif
         if (!p_req->data) {
-            printf("%s: Type %d has NULL pointer for data\n",
-                    "MSDC0", p_req->type);
+            /*printf("%s: Type %d has NULL pointer for data\n",
+                    "MSDC0", p_req->type);*/
             return -EINVAL;
         }
         if (p_req->type == RPMB_WRITE_DATA) {
             if (!p_req->wc || !p_req->mac) {
-                printf("%s: Type %d has NULL pointer for write counter/MAC\n",
+                /*printf("%s: Type %d has NULL pointer for write counter/MAC\n",
                         "MSDC0",
-                        p_req->type);
+                        p_req->type);*/
                 return -EINVAL;
             }
         } else {
             if (!p_req->nonce) {
-                printf("%s: Type %d has NULL pointer for nonce\n",
+                /*printf("%s: Type %d has NULL pointer for nonce\n",
                         "MSDC0",
-                        p_req->type);
+                        p_req->type);*/
                 return -EINVAL;
             }
         }
     } else if (p_req->type == RPMB_PROGRAM_KEY) {
         if (!p_req->mac) {
-            printf("%s: Type %d has NULL pointer for MAC\n",
-                    "MSDC0", p_req->type);
+            /*printf("%s: Type %d has NULL pointer for MAC\n",
+                    "MSDC0", p_req->type);*/
             return -EINVAL;
         }
         /*
@@ -607,8 +611,8 @@ int mmc_rpmb_pre_frame(struct mmc_core_rpmb_req *rpmb_req,
 
     p_req = rpmb_req->req;
     if (!p_req) {
-        printf("%s: mmc_ioc_rpmb_req is NULL. Wrong parameter\n",
-                "MSDC0");
+        //printf("%s: mmc_ioc_rpmb_req is NULL. Wrong parameter\n",
+                //"MSDC0");
         return -EINVAL;
     }
 
@@ -622,14 +626,14 @@ int mmc_rpmb_pre_frame(struct mmc_core_rpmb_req *rpmb_req,
         return ret;
 
     if (p_req->blk_cnt != 1) {
-        printf("rpmb only 1 block allowed, got %d\n", p_req->blk_cnt);
+        //printf("rpmb only 1 block allowed, got %d\n", p_req->blk_cnt);
         return -ENOMEM;
     }
 
     buf_frame = rpmb_req->frame;
     if (!buf_frame) {
-        printf("%s: cannot allocate frame for type %d\n",
-                "MSDC0", p_req->type);
+        //printf("%s: cannot allocate frame for type %d\n",
+                //"MSDC0", p_req->type);
         return -ENOMEM;
     }
 
@@ -684,7 +688,7 @@ int mmc_rpmb_pre_frame(struct mmc_core_rpmb_req *rpmb_req,
         memcpy(buf_frame + RPMB_MAC_BEG,
                 p_req->mac, 32);
     } else {
-        printf("%s: We shouldn't be here\n", "MSDC0");
+        //printf("%s: We shouldn't be here\n", "MSDC0");
         return -EINVAL;
     }
     rpmb_req->ready = 1;
@@ -705,7 +709,7 @@ int mmc_rpmb_get_write_count(struct msdc_host *host, uint32_t *wc) {
     /* check request */
     ret = mmc_rpmb_pre_frame(&rpmb_req, host);
     if (ret) {
-        printf("%s: prepare frame failed\n", "MSDC0");
+        //printf("%s: prepare frame failed\n", "MSDC0");
         return ret;
     }
 
@@ -714,18 +718,21 @@ int mmc_rpmb_get_write_count(struct msdc_host *host, uint32_t *wc) {
      */
     ret = mmc_set_part(host, 3);
     if (ret) {
-        printf("mmc_set_part fail %d\n", ret);
+        //printf("mmc_set_part fail %d\n", ret);
         return ret;
     }
 
     ret = mmc_rpmb_partition_ops(&rpmb_req, host);
     if (ret)
-        printf("%s: failed (%d) to handle RPMB request type (%d)!\n",
-                "MSDC0", ret, req.type);
+	{
+		//printf("%s: failed (%d) to handle RPMB request type (%d)!\n",
+                //"MSDC0", ret, req.type);
+	}
+        
 
     mmc_rpmb_post_frame(&rpmb_req);
 
-    printf("result = %d\n", result);
+    //printf("result = %d\n", result);
 
     return ret;
 }
@@ -755,7 +762,7 @@ int mmc_rpmb_read(struct msdc_host *host, void *buf) {
     /* check request */
     ret = mmc_rpmb_pre_frame(&rpmb_req, host);
     if (ret) {
-        printf("%s: prepare frame failed\n", "MSDC0");
+        //printf("%s: prepare frame failed\n", "MSDC0");
         return ret;
     }
 
@@ -764,18 +771,21 @@ int mmc_rpmb_read(struct msdc_host *host, void *buf) {
      */
     ret = mmc_set_part(host, 3);
     if (ret) {
-        printf("mmc_set_part fail %d\n", ret);
+        //printf("mmc_set_part fail %d\n", ret);
         return ret;
     }
 
     ret = mmc_rpmb_partition_ops(&rpmb_req, host);
     if (ret)
-        printf("%s: failed (%d) to handle RPMB request type (%d)!\n",
-                "MSDC0", ret, req.type);
+	{
+		//printf("%s: failed (%d) to handle RPMB request type (%d)!\n",
+                //"MSDC0", ret, req.type);
+	}
+        
 
     mmc_rpmb_post_frame(&rpmb_req);
 
-    printf("result = %d\n", result);
+    //printf("result = %d\n", result);
 
     byteswap(buf, 0x100);
 
@@ -872,17 +882,17 @@ static void sej_fini() {
 }
 
 static void sej_encrypt(void *buf, size_t len, void *buf2) {
-    // printf("orig:\n");
+    // //printf("orig:\n");
     // hex_dump(buf, len);
 
-    // printf("sej init\n");
+    // //printf("sej init\n");
     sej_init(1);
-    // printf("sej run\n");
+    // //printf("sej run\n");
     sej_run(buf, len, buf2);
-    // printf("sej fini\n");
+    // //printf("sej fini\n");
     sej_fini();
 
-    // printf("result:\n");
+    // //printf("result:\n");
     // hex_dump(buf, len);
 }
 
@@ -891,20 +901,20 @@ uint8_t rpmb_key[32];
 void rpmb_calc_mac(struct mmc_core_rpmb_req *rpmb_req) {
     struct mmc_ioc_rpmb_req *req = rpmb_req->req;
 
-    printf("hmac over \n");
-    hex_dump(rpmb_req->frame + RPMB_DATA_BEG, 512 - RPMB_DATA_BEG);
+    //printf("hmac over \n");
+    //hex_dump(rpmb_req->frame + RPMB_DATA_BEG, 512 - RPMB_DATA_BEG);
     hmac_sha256(req->mac, rpmb_req->frame + RPMB_DATA_BEG, 512 - RPMB_DATA_BEG, rpmb_key, sizeof(rpmb_key));
 
-    printf("using key \n");
-    hex_dump(rpmb_key, sizeof(rpmb_key));
+    //printf("using key \n");
+    //hex_dump(rpmb_key, sizeof(rpmb_key));
 
-    printf("results in \n");
-    hex_dump(req->mac, 32);
+    //printf("results in \n");
+    //hex_dump(req->mac, 32);
 
     memcpy(rpmb_req->frame + RPMB_MAC_BEG, req->mac, 32);
 
-    printf("frame:\n");
-    hex_dump(rpmb_req->frame, 0x200);
+    //printf("frame:\n");
+    //hex_dump(rpmb_req->frame, 0x200);
     // sej_encrypt(req->mac, 32, req->mac);
 }
 
@@ -923,10 +933,10 @@ int mmc_rpmb_write(struct msdc_host *host, void *buf) {
 
     ret = mmc_rpmb_get_write_count(host, &wc);
     if (ret) {
-        printf("mmc_rpmb_get_write_count %d\n", ret);
+        //printf("mmc_rpmb_get_write_count %d\n", ret);
         return ret;
     }
-    printf("wc = %d\n", wc);
+    //printf("wc = %d\n", wc);
 
     req.type = RPMB_WRITE_DATA;
     req.blk_cnt = 1;
@@ -941,7 +951,7 @@ int mmc_rpmb_write(struct msdc_host *host, void *buf) {
     /* check request */
     ret = mmc_rpmb_pre_frame(&rpmb_req, host);
     if (ret) {
-        printf("%s: prepare frame failed\n", "MSDC0");
+        //printf("%s: prepare frame failed\n", "MSDC0");
         return ret;
     }
 
@@ -952,45 +962,48 @@ int mmc_rpmb_write(struct msdc_host *host, void *buf) {
      */
     ret = mmc_set_part(host, 3);
     if (ret) {
-        printf("mmc_set_part fail %d\n", ret);
+        //printf("mmc_set_part fail %d\n", ret);
         return ret;
     }
 
     ret = mmc_rpmb_partition_ops(&rpmb_req, host);
     if (ret)
-        printf("%s: failed (%d) to handle RPMB request type (%d)!\n",
-                "MSDC0", ret, req.type);
+	{
+		//printf("%s: failed (%d) to handle RPMB request type (%d)!\n",
+                //"MSDC0", ret, req.type);
+	}
+        
 
     mmc_rpmb_post_frame(&rpmb_req);
 
-    printf("result = %d\n", result);
+    //printf("result = %d\n", result);
 
     return ret;
 }
 
 static void derive_rpmb_key(uint8_t *in) {
-    printf("in:\n");
-    hex_dump(in, 16);
-    printf("\n");
+    //printf("in:\n");
+    //hex_dump(in, 16);
+    //printf("\n");
 
     uint8_t expand[32] = { 0 };
     for (int i = 0; i < 32; ++i) {
         expand[i] = in[i % 16];
     }
 
-    printf("expand:\n");
-    hex_dump(expand, 32);
-    printf("\n");
+    //printf("expand:\n");
+    //hex_dump(expand, 32);
+    //printf("\n");
 
     sej_encrypt(expand, 32, expand);
-    printf("encrypted:\n");
-    hex_dump(expand, 32);
-    printf("\n");
+    //printf("encrypted:\n");
+    //hex_dump(expand, 32);
+    //printf("\n");
 
     byteswap(expand, 32);
-    printf("final:\n");
-    hex_dump(expand, 32);
-    printf("\n");
+    //printf("final:\n");
+    //hex_dump(expand, 32);
+    //printf("\n");
 
     memcpy(rpmb_key, expand, 32);
 }
@@ -1004,25 +1017,25 @@ int mmc_init(struct msdc_host *host) {
     sleepy();
     sdr_write32(MSDC_CFG, sdr_read32(MSDC_CFG) | 0x1000);
     sleepy();
-    printf("MSDC_CFG: 0x%08X\n", sdr_read32(MSDC_CFG));
+    ////printf("MSDC_CFG: 0x%08X\n", sdr_read32(MSDC_CFG));
 
     ret = mmc_go_idle(host);
-    printf("GO_IDLE = 0x%08X\n", ret);
+    ////printf("GO_IDLE = 0x%08X\n", ret);
 
     uint32_t ocr = 0;
     ret = mmc_send_op_cond(host, 0, &ocr);
-    printf("SEND_OP_COND = 0x%08X ocr = 0x%08X\n", ret, ocr);
+    ////printf("SEND_OP_COND = 0x%08X ocr = 0x%08X\n", ret, ocr);
 
     ocr = mmc_select_voltage(host, ocr);
     ocr |= 1 << 30;
-    printf("new ocr = 0x%08X\n", ocr);
+    ////printf("new ocr = 0x%08X\n", ocr);
     uint32_t rocr = 0;
     ret = mmc_send_op_cond(host, ocr, &rocr);
-    printf("SEND_OP_COND = 0x%08X ocr = 0x%08X\n", ret, rocr);
+    ////printf("SEND_OP_COND = 0x%08X ocr = 0x%08X\n", ret, rocr);
 
     uint32_t cid[4] = { 0 };
     ret = mmc_all_send_cid(host, cid);
-    printf("ALL_SEND_CID = 0x%08X cid = 0x%08X 0x%08X 0x%08X 0x%08X\n", ret, cid[0], cid[1], cid[2], cid[3]);
+    ////printf("ALL_SEND_CID = 0x%08X cid = 0x%08X 0x%08X 0x%08X 0x%08X\n", ret, cid[0], cid[1], cid[2], cid[3]);
 
     uint32_t cid_be[4] = { 0 };
     for (int i = 0; i < 4; ++i)
@@ -1030,10 +1043,10 @@ int mmc_init(struct msdc_host *host) {
     derive_rpmb_key((void*)cid_be);
 
     ret = mmc_set_relative_addr(host, 1);
-    printf("SET_RELATIVE_ADDR = 0x%08X\n", ret);
+    ////printf("SET_RELATIVE_ADDR = 0x%08X\n", ret);
 
     ret = mmc_select_card(host, 1);
-    printf("SELECT_CARD = 0x%08X\n", ret);
+    ////printf("SELECT_CARD = 0x%08X\n", ret);
 
     return 0;
 }

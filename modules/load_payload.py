@@ -114,28 +114,29 @@ def load_payload(dev):
 
     attempt2(d)
 
-    udev = usb.core.find(idVendor=0x0E8D, idProduct=0x3)
+    #udev = usb.core.find(idVendor=0x0E8D, idProduct=0x3)
     
-    try:
+    #try:
         # noinspection PyProtectedMember
-        udev._ctx.managed_claim_interface = lambda *args, **kwargs: None
-    except AttributeError as e:
-        raise RuntimeError("libusb is not installed for port {}".format(device.dev.port)) from e
+        #udev._ctx.managed_claim_interface = lambda *args, **kwargs: None
+    #except AttributeError as e:
+        #raise RuntimeError("libusb is not installed for port {}".format(device.dev.port)) from e
 
     log("Let's rock")
-    try:
-        udev.ctrl_transfer(0xA1, 0, 0, 10, 0)
-    except usb.core.USBError as e:
-        print(e)
+    #try:
+        #udev.ctrl_transfer(0xA1, 0, 0, 10, 0)
+    #except usb.core.USBError as e:
+        #print(e)
 
     # clear 2 more bytes
-    d.read(2)
+    #d.read(2)
 
     log("Waiting for stage 1 to come online...")
 
     data = d.read(4)
     log(data)
-    if data != b"\xA1\xA2\xA3\xA4":
+    
+    if data != to_bytes(0xA1A2A3A4, 4):
         raise RuntimeError("received {} instead of expected pattern".format(data))
 
     dev.kick_watchdog()

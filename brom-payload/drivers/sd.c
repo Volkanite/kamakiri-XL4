@@ -16,7 +16,7 @@
 #define msdc_fifo_read32()   sdr_read32(MSDC_RXDATA)
 #define msdc_fifo_read8()    sdr_read8(MSDC_RXDATA) 
 
-#define msdc_dma_on()        sdr_clr_bits(MSDC_CFG, MSDC_CFG_PIO)
+#define msdc_dma_on()        sdr_clr_bits(MSDC_CFG, MSDC_CFG_PIO)640
 #define msdc_dma_off()       sdr_set_bits(MSDC_CFG, MSDC_CFG_PIO)
 
 #define sdc_is_busy()          (sdr_read32(SDC_STS) & SDC_STS_SDCBUSY)
@@ -168,10 +168,10 @@ int msdc_pio_read(struct msdc_host *host, void *buf)
         break;
     }
     // data->bytes_xfered += size;
-    N_MSG(FIO, "        PIO Read<%d>bytes\n", size);
+    //N_MSG(FIO, "        PIO Read<%d>bytes\n", size);
         
     sdr_clr_bits(MSDC_INTEN, wints);    
-    if(error) ERR_MSG("read pio data->error<%d> left<%d> size<%d>\n", error, left, size);
+    //if(error) ERR_MSG("read pio data->error<%d> left<%d> size<%d>\n", error, left, size);
     return error;
 }
 
@@ -252,10 +252,10 @@ int msdc_pio_write(struct msdc_host* host, void *buf)
         break;
     }
     // data->bytes_xfered += size;
-    N_MSG(FIO, "        PIO Write<%d>bytes\n", size);
+    //N_MSG(FIO, "        PIO Write<%d>bytes\n", size);
     if (size != 0x200)
         error = -EIO;
-    if(error) ERR_MSG("write pio data->error<%d>\n", error);
+    //if(error) ERR_MSG("write pio data->error<%d>\n", error);
         
     //sdr_clr_bits(MSDC_INTEN, wints);  
     return error; 
@@ -293,7 +293,7 @@ static unsigned int msdc_command_start(struct msdc_host   *host,
     else if (opcode == MMC_SELECT_CARD) {
         resp = (cmd->arg != 0) ? RESP_R1B : RESP_NONE;
         host->app_cmd_arg = cmd->arg;
-        printk(KERN_WARNING "msdc%d select card<0x%.8x>", host->id,cmd->arg);  // select and de-select                  
+        //printk(KERN_WARNING "msdc%d select card<0x%.8x>", host->id,cmd->arg);  // select and de-select                  
     } else if (opcode == SD_IO_RW_DIRECT || opcode == SD_IO_RW_EXTENDED)
         resp = RESP_R1; /* SDIO workaround. */
     else if (opcode == SD_SEND_IF_COND && (mmc_cmd_type(cmd) == MMC_CMD_BCR))
@@ -373,7 +373,7 @@ static unsigned int msdc_command_start(struct msdc_host   *host,
         rawcmd &= ~(0x0FFF << 16);
     }
 
-    N_MSG(CMD, "CMD<%d><0x%.8x> Arg<0x%.8x>\n", opcode , rawcmd, cmd->arg);
+    //N_MSG(CMD, "CMD<%d><0x%.8x> Arg<0x%.8x>\n", opcode , rawcmd, cmd->arg);
 
     // tmo = jiffies + timeout;
 
@@ -383,7 +383,7 @@ static unsigned int msdc_command_start(struct msdc_host   *host,
                 break;
 #if 0
             if (time_after(jiffies, tmo)) {
-                ERR_MSG("XXX cmd_busy timeout: before CMD<%d>", opcode);    
+                //ERR_MSG("XXX cmd_busy timeout: before CMD<%d>", opcode);    
                 cmd->error = (unsigned int)-ETIMEDOUT;
         if (host->hw->host_function == MSDC_SD) {
             host->reqtimeout_count++;
@@ -403,7 +403,7 @@ static unsigned int msdc_command_start(struct msdc_host   *host,
                 break;
 #if 0
             if (time_after(jiffies, tmo)) {
-                ERR_MSG("XXX sdc_busy timeout: before CMD<%d>", opcode);    
+                //ERR_MSG("XXX sdc_busy timeout: before CMD<%d>", opcode);    
                 cmd->error = (unsigned int)-ETIMEDOUT;
         if (host->hw->host_function == MSDC_SD) {
             host->reqtimeout_count++;
@@ -507,8 +507,8 @@ static unsigned int msdc_command_resp_polling(struct msdc_host   *host,
         }
 #if 0        
         if (time_after(jiffies, tmo)) {
-            ERR_MSG("XXX CMD<%d> polling_for_completion timeout ARG<0x%.8x>",
-                    cmd->opcode, cmd->arg);
+            /*ERR_MSG("XXX CMD<%d> polling_for_completion timeout ARG<0x%.8x>",
+                    cmd->opcode, cmd->arg);*/
             cmd->error = (unsigned int)-ETIMEDOUT;
             if (host->hw->host_function == MSDC_SD) {
                 host->cmdtimeout_count++;
@@ -548,12 +548,12 @@ static unsigned int msdc_command_resp_polling(struct msdc_host   *host,
 #ifdef MTK_SDIO30_TEST_MODE_SUPPORT
                 if((intsts & MSDC_INT_ACMD53_DONE))
                 {
-                    xlog_printk(ANDROID_LOG_DEBUG, "SDIO_TEST_MODE", "Get CRC Value [B]\n");
+                    //xlog_printk(ANDROID_LOG_DEBUG, "SDIO_TEST_MODE", "Get CRC Value [B]\n");
                     *rsp++ = sdr_read32(DAT0_TUNE_CRC);
                     *rsp++ = sdr_read32(DAT1_TUNE_CRC);
                     *rsp++ = sdr_read32(DAT2_TUNE_CRC);
                     *rsp++ = sdr_read32(DAT3_TUNE_CRC);
-                    xlog_printk(ANDROID_LOG_DEBUG, "SDIO_TEST_MODE", "Get CRC Value [E]\n");
+                    //xlog_printk(ANDROID_LOG_DEBUG, "SDIO_TEST_MODE", "Get CRC Value [E]\n");
                 }
                 else
 #endif  // MTK_SDIO30_TEST_MODE_SUPPORT
@@ -562,7 +562,7 @@ static unsigned int msdc_command_resp_polling(struct msdc_host   *host,
             }
         } else if (intsts & MSDC_INT_RSPCRCERR) {
             cmd->error = (unsigned int)-EIO;
-            IRQ_MSG("XXX CMD<%d> MSDC_INT_RSPCRCERR Arg<0x%.8x>",cmd->opcode, cmd->arg);
+            //IRQ_MSG("XXX CMD<%d> MSDC_INT_RSPCRCERR Arg<0x%.8x>",cmd->opcode, cmd->arg);
         /* cmd19 rsp crc error, still need receive data, so cannot call msdc_reset_hw() */
         if (cmd->opcode != MMC_SEND_TUNING_BLOCK)
             msdc_reset_hw(host->id);
@@ -579,7 +579,7 @@ static unsigned int msdc_command_resp_polling(struct msdc_host   *host,
 #endif
     } else if (intsts & MSDC_INT_CMDTMO) {
         cmd->error = (unsigned int)-ETIMEDOUT;
-        IRQ_MSG("XXX CMD<%d> MSDC_INT_CMDTMO Arg<0x%.8x>",cmd->opcode, cmd->arg);
+        //IRQ_MSG("XXX CMD<%d> MSDC_INT_CMDTMO Arg<0x%.8x>",cmd->opcode, cmd->arg);
         msdc_reset_hw(host->id);
 #if 0
         if (host->hw->host_function == MSDC_SD) {
@@ -596,13 +596,13 @@ static unsigned int msdc_command_resp_polling(struct msdc_host   *host,
                   u32 *arsp = &sbc->resp[0];
                   *arsp = sdr_read32(SDC_ACMD_RESP);
              } else if (intsts & MSDC_INT_ACMDCRCERR) {
-                 printk("autocmd23 crc error\n");
+                 //printk("autocmd23 crc error\n");
                   sbc->error = (unsigned int)-EIO;
                   cmd->error = (unsigned int)-EIO; // record the error info in current cmd struct
                   //host->error |= REQ_CMD23_EIO;
                   msdc_reset_hw(host->id);
              } else if (intsts & MSDC_INT_ACMDTMO) {
-                 printk("autocmd23 to error\n");
+                 //printk("autocmd23 to error\n");
                   sbc->error =(unsigned int)-ETIMEDOUT;
                   cmd->error = (unsigned int)-ETIMEDOUT;  // record the error info in current cmd struct
                   //host->error |= REQ_CMD23_TMO;
@@ -633,12 +633,13 @@ static unsigned int msdc_do_command(struct msdc_host   *host,
         goto end;
 end:    
 
-    N_MSG(CMD, "        return<%d> resp<0x%.8x>\n", cmd->error, cmd->resp[0]);    
+    //N_MSG(CMD, "        return<%d> resp<0x%.8x>\n", cmd->error, cmd->resp[0]);    
     return cmd->error;
 }
 
 unsigned int msdc_cmd(struct msdc_host *host, struct mmc_command *cmd) {
     return msdc_do_command(host, cmd, 0, 500); // 500 ms ?
+	//return 0;
 }
 
 void msdc_set_blknum(struct msdc_host *host, u32 blknum)
