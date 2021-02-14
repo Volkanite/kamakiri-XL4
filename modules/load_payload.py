@@ -25,15 +25,20 @@ def load_payload_file(path):
     return payload
 
 def attempt2(d):
-    d.write(b"\xE0")
-    result = d.read(1)
-    d.write(p32(0xA00))
-    result = d.read(4)
 
     payload = load_payload_file("../brom-payload/stage1/stage1.bin")
-
-    if len(payload) >= 0xA00:
-        raise RuntimeError("payload too large")
+    payload += b'\x00' * 0x100
+    
+    size = len(payload)
+    
+    d.write(b"\xD7")
+    result = d.read(1)
+    d.write(p32(0x200D00))
+    result = d.read(4)
+    d.write(p32(size))
+    result = d.read(4)
+    d.write(p32(0x100))
+    result = d.read(4)
 
     d.write(payload)
 
@@ -66,8 +71,13 @@ def load_payload(dev):
 
     attempt2(d)
 
-    udev = usb.core.find(idVendor=0x0e8d, idProduct=0x3)
-    udev._ctx.managed_claim_interface = noop
+    udev = usb.core.find(idVendor=0x0E8D, idProduct=0x3)
+    
+    try:
+        # noinspection PyProtectedMember
+        udev._ctx.managed_claim_interface = lambda *args, **kwargs: None
+    except AttributeError as e:
+        raise RuntimeError("libusb is not installed for port {}".format(device.dev.port)) from e
 
     log("Let's rock")
     try:
@@ -81,6 +91,7 @@ def load_payload(dev):
     log("Waiting for stage 1 to come online...")
 
     data = d.read(4)
+    log(data)
     if data != b"\xA1\xA2\xA3\xA4":
         raise RuntimeError("received {} instead of expected pattern".format(data))
 
