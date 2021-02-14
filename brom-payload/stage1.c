@@ -12,20 +12,26 @@ int print(char* s){
 
 int main() {
 
-    print("Entered 1ST stage payload\n");
-    print("Copyright xyz, k4y0z 2019\n");
+    //print("Entered 1ST stage payload\n");
+    //print("Copyright xyz, k4y0z 2019\n");
 
     //This is so we don't get a USB-Timeout
-    print("Send USB response\n");
-    send_usb_response(0,0,1);
+    //print("Send USB response\n");
+    //send_usb_response(0,0,1);
 
-    print("Entering command loop\n");
+    //print("Entering command loop\n");
+	
+	send_dword = (void*)0xBCD3;
+	recv_dword = (void*)0xBC9F;
+	send_data = (void*)0xBED1;
+	recv_data = (void*)0xBD15;
+
     send_dword(0xA1A2A3A4, 1);
 
     while (1) {
         uint32_t magic = recv_dword();
         if (magic != 0xf00dd00d) {
-            print("Protocol error\n");
+            //print("Protocol error\n");
             //printf("Magic received = 0x%08X\n", magic);
             break;
         }
@@ -35,7 +41,7 @@ int main() {
             uint32_t address = recv_dword();
             uint32_t size = recv_dword();
             //printf("Write %d Bytes to address 0x%08X\n", size, address);
-            print("Write\n");
+            //print("Write\n");
 			
             recv_data(address, size, 0);
                 //print("OK\n");
@@ -47,12 +53,12 @@ int main() {
         case 0x4001: {
             void (*jump_address)(void) = (void*) recv_dword();
             //printf("Jump to address 0x%08X\n", *jump_address);
-	    print("Jump\n");
+	    //print("Jump\n");
             jump_address();
             break;
         }
         case 0x3000: {
-            print("Reboot\n");
+            //print("Reboot\n");
             volatile uint32_t *reg = (volatile uint32_t *)0x10007000;
             reg[8/4] = 0x1971;
             reg[0/4] = 0x22000014;
@@ -63,18 +69,18 @@ int main() {
             }
         }
         case 0x3001: {
-            print("Kick watchdog\n");
+            //print("Kick watchdog\n");
             volatile uint32_t *reg = (volatile uint32_t *)0x10007000;
             reg[8/4] = 0x1971;
             break;
         }
         default:
-            print("Invalid command\n");
+            //print("Invalid command\n");
             break; 
         }
     }
 
-    print("Exiting the payload\n");
+    //print("Exiting the payload\n");
 
     while (1) {
 
